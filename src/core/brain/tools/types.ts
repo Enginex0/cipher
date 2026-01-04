@@ -15,7 +15,7 @@ import type { KnowledgeGraphManager } from '../../knowledge_graph/manager.js';
 /**
  * Categories for organizing internal tools
  */
-export type InternalToolCategory = 'memory' | 'session' | 'system' | 'knowledge_graph';
+export type InternalToolCategory = 'memory' | 'session' | 'system' | 'knowledge_graph' | 'incremental';
 
 /**
  * Internal tool handler function signature

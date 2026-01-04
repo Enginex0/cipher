@@ -11,6 +11,7 @@ export interface MilvusConnectionConfig {
 	port?: number;
 	username?: string;
 	password?: string;
+	token?: string;
 }
 
 /**
@@ -149,15 +150,28 @@ export class MilvusConnectionPool {
 			(config.host && config.port
 				? `http://${config.host}:${config.port}`
 				: env.VECTOR_STORE_URL || '');
+		const token = config.token || env.VECTOR_STORE_API_KEY || '';
 		const username = config.username || env.VECTOR_STORE_USERNAME || '';
 		const password = config.password || env.VECTOR_STORE_PASSWORD || '';
 
 		try {
-			const client = new MilvusClient({
+			// Use token auth for Zilliz Cloud, username/password for self-hosted Milvus
+			const clientConfig: { address: string; token?: string; username?: string; password?: string } = {
 				address,
-				username,
-				password,
-			});
+			};
+
+			if (token) {
+				// Zilliz Cloud uses token-based authentication
+				clientConfig.token = token;
+				logger.debug('MilvusConnectionPool: Using token authentication for Zilliz Cloud');
+			} else if (username && password) {
+				// Self-hosted Milvus uses username/password
+				clientConfig.username = username;
+				clientConfig.password = password;
+				logger.debug('MilvusConnectionPool: Using username/password authentication');
+			}
+
+			const client = new MilvusClient(clientConfig);
 
 			// Test the connection by trying to list collections
 			await client.showCollections();
@@ -167,6 +181,8 @@ export class MilvusConnectionPool {
 			logger.error('MilvusConnectionPool: Failed to create client', {
 				error: error instanceof Error ? error.message : String(error),
 				address,
+				hasToken: !!token,
+				hasCredentials: !!(username && password),
 			});
 			throw error;
 		}

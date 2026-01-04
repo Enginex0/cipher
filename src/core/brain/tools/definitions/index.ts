@@ -9,6 +9,7 @@
 export * from './memory/index.js';
 export * from './knowledge_graph/index.js';
 export * from './system/index.js';
+export * from './incremental/index.js';
 
 // Import types and utilities
 import type { InternalToolSet } from '../types.js';
@@ -52,12 +53,29 @@ export async function getAllToolDefinitions(
 			logger.debug('Knowledge graph disabled, skipping knowledge graph tools');
 		}
 
+		// Load incremental analysis tools (envelopes, snapshots, delta, graph, etc.)
+		console.error('[CIPHER-DEBUG] getAllToolDefinitions: Loading incremental tools...');
+		let incrementalTools: InternalToolSet = {};
+		try {
+			incrementalTools = await import('./incremental/index.js').then(m =>
+				m.getIncrementalTools()
+			);
+			console.error('[CIPHER-DEBUG] getAllToolDefinitions: Incremental tools loaded:', Object.keys(incrementalTools).length);
+			console.error('[CIPHER-DEBUG] getAllToolDefinitions: Incremental tool names:', Object.keys(incrementalTools));
+		} catch (incrementalError) {
+			console.error('[CIPHER-DEBUG] FAILED to load incremental tools:', incrementalError);
+		}
+		logger.debug('Incremental analysis tools loaded', {
+			toolCount: Object.keys(incrementalTools).length,
+		});
+
 		// Combine all tools (reasoning tools are already included in memoryTools now)
 		const allTools: InternalToolSet = {
 			...memoryTools,
 			...systemTools,
 			...knowledgeGraphTools,
 			...webSearchTools,
+			...incrementalTools,
 		};
 
 		// Tool loading completion logging reduced for cleaner CLI experience
@@ -170,6 +188,25 @@ export const TOOL_CATEGORIES = {
 		tools: ['bash'] as string[],
 		useCase:
 			'Use these tools to execute system commands, interact with the filesystem, and perform system-level operations',
+	},
+	incremental: {
+		description: 'Tools for Claude-Hybrid incremental analysis, envelopes, snapshots, and impact propagation',
+		tools: [
+			'envelope_store',
+			'envelope_query',
+			'envelope_get',
+			'envelope_delete',
+			'snapshot_create',
+			'snapshot_query',
+			'snapshot_merge',
+			'delta_compute',
+			'graph_update',
+			'graph_propagate',
+			'finding_relocate',
+			'branch_manage',
+		] as string[],
+		useCase:
+			'Use these tools for incremental analysis workflows including envelope management, snapshot versioning, delta computation, and branch-aware CI/CD integration',
 	},
 };
 

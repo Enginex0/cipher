@@ -277,6 +277,7 @@ export class InternalToolRegistry {
 			'session',
 			'system',
 			'knowledge_graph',
+			'incremental',
 		];
 		if (!tool.category || !validCategories.includes(tool.category)) {
 			return { valid: false, error: `Tool category must be one of: ${validCategories.join(', ')}` };

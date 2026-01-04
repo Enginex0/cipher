@@ -89,6 +89,8 @@ const envSchema = z.object({
 	// Knowledge Graph Configuration
 	KNOWLEDGE_GRAPH_ENABLED: z.boolean().default(false),
 	KNOWLEDGE_GRAPH_TYPE: z.enum(['neo4j', 'in-memory']).default('in-memory'),
+	// Incremental Analysis Configuration
+	INCREMENTAL_ANALYSIS_ENABLED: z.boolean().default(true),
 	KNOWLEDGE_GRAPH_HOST: z.string().optional(),
 	KNOWLEDGE_GRAPH_PORT: z.number().optional(),
 	KNOWLEDGE_GRAPH_URI: z.string().optional(),
@@ -290,6 +292,9 @@ export const env: EnvSchema = new Proxy({} as EnvSchema, {
 				return process.env.KNOWLEDGE_GRAPH_ENABLED === 'true';
 			case 'KNOWLEDGE_GRAPH_TYPE':
 				return process.env.KNOWLEDGE_GRAPH_TYPE || 'in-memory';
+			// Incremental Analysis Configuration
+			case 'INCREMENTAL_ANALYSIS_ENABLED':
+				return process.env.INCREMENTAL_ANALYSIS_ENABLED !== 'false';
 			case 'KNOWLEDGE_GRAPH_HOST':
 				return process.env.KNOWLEDGE_GRAPH_HOST;
 			case 'KNOWLEDGE_GRAPH_PORT':
@@ -533,6 +538,8 @@ export const validateEnv = () => {
 		// Knowledge Graph Configuration
 		KNOWLEDGE_GRAPH_ENABLED: process.env.KNOWLEDGE_GRAPH_ENABLED === 'true',
 		KNOWLEDGE_GRAPH_TYPE: process.env.KNOWLEDGE_GRAPH_TYPE || 'in-memory',
+		// Incremental Analysis Configuration
+		INCREMENTAL_ANALYSIS_ENABLED: process.env.INCREMENTAL_ANALYSIS_ENABLED !== 'false',
 		KNOWLEDGE_GRAPH_HOST: process.env.KNOWLEDGE_GRAPH_HOST,
 		KNOWLEDGE_GRAPH_PORT: process.env.KNOWLEDGE_GRAPH_PORT
 			? parseInt(process.env.KNOWLEDGE_GRAPH_PORT, 10)

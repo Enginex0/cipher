@@ -62,6 +62,7 @@ export class MilvusBackend implements VectorStore {
 			port: config.port || undefined,
 			username: config.username || env.VECTOR_STORE_USERNAME || undefined,
 			password: config.password || env.VECTOR_STORE_PASSWORD || undefined,
+			token: config.token || env.VECTOR_STORE_API_KEY || undefined,
 		} as MilvusConnectionConfig;
 
 		this.logger.debug(`${LOG_PREFIXES.MILVUS} Backend initialized with connection pooling`, {
