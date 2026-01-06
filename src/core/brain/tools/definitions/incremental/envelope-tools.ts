@@ -567,12 +567,13 @@ export const envelopeDeleteTool: InternalTool = {
 
 		try {
 			const vectorStoreManager = context?.services?.vectorStoreManager;
+			const embeddingManager = context?.services?.embeddingManager;
 
-			if (!vectorStoreManager) {
+			if (!vectorStoreManager || !embeddingManager) {
 				return {
 					success: false,
 					deleted: false,
-					error: 'Vector store not available',
+					error: 'Vector store or embedding manager not available',
 				};
 			}
 
@@ -591,15 +592,58 @@ export const envelopeDeleteTool: InternalTool = {
 				};
 			}
 
-			// Delete by ID using correct API
-			await store.delete(args.envelope_id);
+			// First, find the envelope to get its vector_id
+			const embedder = embeddingManager.getEmbedder('default');
+			if (!embedder) {
+				return {
+					success: false,
+					deleted: false,
+					error: 'Embedder not available',
+				};
+			}
 
-			logger.info('Envelope deleted', { envelope_id: args.envelope_id });
+			// Search for the envelope by envelope_id
+			const idEmbedding = await embedder.embed(args.envelope_id);
+			const results = await store.search(idEmbedding, 100);
+
+			// Find exact match
+			const exactMatch = results.find((r: any) => {
+				const p = r.payload || r;
+				return p.memoryType === 'envelope' && p.envelope_id === args.envelope_id;
+			});
+
+			if (!exactMatch) {
+				return {
+					success: false,
+					deleted: false,
+					envelope_id: args.envelope_id,
+					error: 'Envelope not found',
+				};
+			}
+
+			// Get the numeric vector_id from the payload
+			const payload = exactMatch.payload || exactMatch;
+			const vectorId = payload.vector_id;
+
+			if (!vectorId) {
+				return {
+					success: false,
+					deleted: false,
+					envelope_id: args.envelope_id,
+					error: 'Envelope has no vector_id - cannot delete',
+				};
+			}
+
+			// Delete by numeric vector_id
+			await store.delete(vectorId);
+
+			logger.info('Envelope deleted', { envelope_id: args.envelope_id, vector_id: vectorId });
 
 			return {
 				success: true,
 				deleted: true,
 				envelope_id: args.envelope_id,
+				vector_id: vectorId,
 				processingTime: Date.now() - startTime,
 			};
 		} catch (error) {
