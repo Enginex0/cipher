@@ -938,6 +938,20 @@ export const extractAndOperateMemoryTool: InternalTool = {
 							options.sourceSessionId = context.sessionId;
 						}
 
+						// Caller-provided metadata overrides framework defaults
+						if (args.context?.sessionId) {
+							options.sourceSessionId = args.context.sessionId;
+						}
+						if (args.memoryMetadata?.projectId) {
+							options.projectId = args.memoryMetadata.projectId;
+						}
+						if (args.memoryMetadata?.userId) {
+							options.userId = args.memoryMetadata.userId;
+						}
+						if (args.memoryMetadata?.source) {
+							options.source = args.memoryMetadata.source;
+						}
+
 						// Merge knowledge info (agent-provided takes precedence over extraction)
 						if (args.options?.autoExtractKnowledgeInfo !== false) {
 							const llmKnowledge = args.knowledgeInfo || {};

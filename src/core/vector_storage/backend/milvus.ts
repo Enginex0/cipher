@@ -169,6 +169,9 @@ export class MilvusBackend implements VectorStore {
 				}
 			}
 
+			// Ensure payload field indexes exist (no-op for already-indexed fields)
+			await this.createPayloadFieldIndexes();
+
 			// Load collection
 			const clientForLoad = this.ensureClient();
 			await clientForLoad.loadCollection({ collection_name: this.collectionName });
@@ -220,7 +223,7 @@ export class MilvusBackend implements VectorStore {
 	 * Create indexes for payload fields to improve filtering performance
 	 */
 	private async createPayloadFieldIndexes(): Promise<void> {
-		const payloadFields = ['type', 'category', 'sessionId', 'traceId', 'timestamp'];
+		const payloadFields = ['type', 'category', 'sessionId', 'traceId', 'timestamp', 'projectId', 'source', 'sourceSessionId'];
 
 		for (const fieldName of payloadFields) {
 			try {
@@ -439,25 +442,30 @@ export class MilvusBackend implements VectorStore {
 	}
 }
 
+// Top-level columns that don't need payload[] prefix
+const TOP_LEVEL_FIELDS = new Set(['id', 'vector']);
+
+function fieldRef(key: string): string {
+	return TOP_LEVEL_FIELDS.has(key) ? key : `payload["${key}"]`;
+}
+
 function filtersToExpr(filters?: SearchFilters): string | undefined {
 	if (!filters) return undefined;
-	// Support equality, 'in', and comparison operators (gte, lte, gt, lt)
 	return Object.entries(filters)
 		.map(([key, value]) => {
+			const ref = fieldRef(key);
 			if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
-				return `${key} == "${value}"`;
+				return `${ref} == "${value}"`;
 			}
 			if (value && typeof value === 'object') {
-				// Support 'in' operator
 				if ('any' in value && Array.isArray(value.any)) {
 					const arr = value.any.map(v => `"${v}"`).join(', ');
-					return `${key} in [${arr}]`;
+					return `${ref} in [${arr}]`;
 				}
-				// Support comparison operators
 				const ops: Record<string, string> = { gte: '>=', lte: '<=', gt: '>', lt: '<' };
 				return Object.entries(ops)
 					.filter(([op]) => op in (value as Record<string, unknown>))
-					.map(([op, symbol]) => `${key} ${symbol} ${(value as Record<string, unknown>)[op]}`)
+					.map(([op, symbol]) => `${ref} ${symbol} ${(value as Record<string, unknown>)[op]}`)
 					.join(' && ');
 			}
 			return '';

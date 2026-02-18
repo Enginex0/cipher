@@ -10,6 +10,7 @@
 // export { memoryOperationTool } from './memory_operation.js';
 import { extractAndOperateMemoryTool } from './extract_and_operate_memory.js';
 import { searchMemoryTool } from './search_memory.js';
+import { deleteMemoryTool } from './delete_memory.js';
 import { storeReasoningMemoryTool } from './store_reasoning_memory.js';
 
 // Import lazy loading optimized tool
@@ -50,6 +51,7 @@ const EMBEDDING_DEPENDENT_TOOLS = [
 export {
 	extractAndOperateMemoryTool,
 	searchMemoryTool,
+	deleteMemoryTool,
 	storeReasoningMemoryTool,
 	extractReasoningSteps,
 	evaluateReasoning,
@@ -111,6 +113,7 @@ export async function getMemoryTools(
 				// Knowledge tools (always available for functionality)
 				cipher_extract_and_operate_memory: extractAndOperateTool,
 				cipher_memory_search: searchMemoryTool,
+				cipher_memory_delete: deleteMemoryTool,
 				// Reflection tools (only available if reflection memory is enabled)
 				...(env.DISABLE_REFLECTION_MEMORY !== true && {
 					cipher_store_reasoning_memory: storeReasoningMemoryTool,
@@ -187,6 +190,7 @@ export async function getAllMemoryToolDefinitions(
 				// Knowledge tools (always available for functionality)
 				cipher_extract_and_operate_memory: extractAndOperateTool,
 				cipher_memory_search: searchMemoryTool,
+				cipher_memory_delete: deleteMemoryTool,
 				// Reflection tools (only available if reflection memory is enabled)
 				...(env.DISABLE_REFLECTION_MEMORY !== true && {
 					cipher_store_reasoning_memory: storeReasoningMemoryTool,

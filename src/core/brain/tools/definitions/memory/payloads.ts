@@ -30,6 +30,7 @@ export interface KnowledgePayload extends BasePayload {
 	// Optional existing fields
 	code_pattern?: string;
 	old_memory?: string;
+	source?: string;
 }
 
 /**
@@ -78,6 +79,7 @@ export function createKnowledgePayload(
 		qualitySource: 'similarity' | 'llm' | 'heuristic';
 		code_pattern?: string;
 		old_memory?: string;
+		source?: string;
 		userId?: string;
 		projectId?: string;
 		workspaceMode?: 'shared' | 'isolated';
@@ -99,9 +101,10 @@ export function createKnowledgePayload(
 		qualitySource: options.qualitySource,
 		...(options.code_pattern && { code_pattern: options.code_pattern }),
 		...(options.old_memory && { old_memory: options.old_memory }),
-		// Add cross-tool sharing identifiers (env vars take precedence for security)
-		userId: env.CIPHER_USER_ID || options.userId,
-		projectId: env.CIPHER_PROJECT_NAME || options.projectId,
+		...(options.source && { source: options.source }),
+		// Caller-provided metadata wins over env var defaults
+		userId: options.userId || env.CIPHER_USER_ID,
+		projectId: options.projectId || env.CIPHER_PROJECT_NAME,
 		workspaceMode: env.CIPHER_WORKSPACE_MODE || options.workspaceMode || 'isolated',
 	};
 }

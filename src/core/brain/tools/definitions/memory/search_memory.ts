@@ -16,7 +16,7 @@ interface MemorySearchResult {
 		tags: string[];
 		timestamp: string;
 		similarity: number;
-		source: 'knowledge';
+		source?: string;
 		memoryType: 'knowledge';
 		version?: number;
 		// Knowledge memory fields
@@ -95,6 +95,12 @@ export const searchMemoryTool: InternalTool = {
 				type: 'boolean',
 				description: 'Whether to apply query refinement for better search results (default: false)',
 				default: false,
+			},
+			filters: {
+				type: 'object',
+				description:
+					'Optional payload filters for scoped retrieval. Keys must match stored payload fields (e.g., projectId, source, sourceSessionId). Values are exact match.',
+				additionalProperties: true,
 			},
 		},
 		required: ['query'],
@@ -325,14 +331,13 @@ export const searchMemoryTool: InternalTool = {
 			for (const queryEmbedding of queryEmbeddings) {
 				// Search knowledge collection
 				try {
-					const knowledgeResults = await knowledgeStore.search(queryEmbedding, topK * 2);
+					const knowledgeResults = await knowledgeStore.search(queryEmbedding, topK * 2, args.filters || undefined);
 
-					// Mark results with source and add to allResults
+					// Mark results with memoryType (preserve payload.source for caller metadata)
 					const markedResults = knowledgeResults.map((result: any) => ({
 						...result,
 						payload: {
 							...result.payload,
-							source: 'knowledge',
 							memoryType: 'knowledge',
 						},
 					}));
@@ -422,7 +427,7 @@ export const searchMemoryTool: InternalTool = {
 						timestamp: payload.timestamp || new Date().toISOString(),
 						similarity: result.score || 0,
 						version: payload.version || 2, // All data is V2 after cleanup
-						source: 'knowledge' as const,
+						...(payload.source && { source: payload.source }),
 						memoryType: 'knowledge' as const,
 					};
 					logger.debug('MemorySearch: search baseResult', baseResult);

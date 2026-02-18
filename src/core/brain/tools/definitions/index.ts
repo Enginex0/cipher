@@ -157,6 +157,7 @@ export const TOOL_CATEGORIES = {
 		tools: [
 			'extract_and_operate_memory',
 			'memory_search',
+			'memory_delete',
 			'store_reasoning_memory',
 			'extract_reasoning_steps',
 			'evaluate_reasoning',
