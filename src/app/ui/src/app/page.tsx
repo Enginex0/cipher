@@ -9,6 +9,7 @@ import { SessionPanel } from "@/components/session-panel";
 import { ServersPanel } from "@/components/servers-panel";
 import { MessageList } from "@/components/message-list";
 import { InputArea } from "@/components/input-area";
+import { LoadTimeFooter } from "@/components/load-time-footer";
 import { QuickAction } from "@/types/chat";
 import { convertChatMessageToMessage } from "@/lib/chat-utils";
 import { useState, useEffect } from "react";
@@ -163,10 +164,13 @@ function MainChatInterface() {
           </SlidingPanel>
         </div>
 
-        <ErrorNotification 
+        <ErrorNotification
           message={errorMessage}
           onDismiss={() => setErrorMessage(null)}
         />
+
+        {/* AC-1: Display load time in footer */}
+        <LoadTimeFooter />
       </main>
     </div>
   );

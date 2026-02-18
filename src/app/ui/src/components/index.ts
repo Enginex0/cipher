@@ -15,6 +15,7 @@ export { ChatExample } from './chat-example';
 export { ChatContextExample } from './chat-context-example';
 export { Navigation } from './navigation';
 export { ConfigPanel } from './config-panel';
+export { LoadTimeFooter } from './load-time-footer';
 
 // Re-export contexts
 export * from '../contexts';
